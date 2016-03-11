@@ -1,0 +1,151 @@
+﻿@section Index {
+
+@model IEnumerable<Comm_Page.Models.Comment>
+<div ng-app="CommPage">
+    <form ng-controller="FrmController">
+        <p id="votesID" style=" font-size:large; color:gray; position:fixed; float:right">@ViewBag.votes</p>
+        <div class='dv1'>
+            <textarea ng-model="txtcomment" placeholder="Your Comment" style='width:85%; max-width:85%'></textarea>
+            <button ng-click='btn_add();' class="btn btn-default">Post Comment</button>
+        </div>
+        <div class="dv1">
+            <ul style="margin-top:30px">
+
+
+                @foreach (var item in Model)
+                {
+                    <li style="margin:20px 0">
+                        <div>
+                            <img style="width:60px; margin-right:10px" align="left" src="~/Content/Images/avatar.png" />
+                            <b>@item.Name</b><br />
+                            @if (item.Like - item.Dislike > 0)
+                            {<p style="color:green">@item.CommentText</p>}
+                            else if (item.Like - item.Dislike < 0)
+                            {<p style="color:red">@item.CommentText</p>}
+                            else
+                            {<p>@item.CommentText</p>}
+                        </div>
+                        <div>
+                            <p style="color:grey; float:right; font-size:15px">@item.Dislike</p>
+                            <img style="float:right; width:22px" src="~/Content/Images/like.png" ng-click="voteDown($event)" />
+
+                            <p id="p" style="color:grey; float:right; font-size:15px">@item.Like</p>
+                            <img style="float:right; width:22px" src="~/Content/Images/dislike.png" ng-click="voteUp($event)" />
+                        </div>
+                    </li>
+                }
+
+
+                <li ng-repeat="comm in comment" style="margin:20px 0">
+                    <div>
+                        <img style="width:60px; margin-right:10px" align="left" src="~/Content/Images/avatar.png" />
+                        <b>@User.Identity.Name</b><br />
+                        <p>{{comm}}</p>
+                        <!--<a style="float: right;" href="" ng-click="remItem($index)">x</a>-->
+                    </div>
+                    <div>
+                        <p style="color:grey; float:right; font-size:15px">0</p>
+                        <img style="float:right; width:22px" src="~/Content/Images/like.png" ng-click="voteDown($event)" />
+
+                        <p id="p" style="color:grey; float:right; font-size:15px">0</p>
+                        <img style="float:right; width:22px" src="~/Content/Images/dislike.png" ng-click="voteUp($event)" />
+                    </div>
+                </li>
+
+
+            </ul>
+
+        </div>
+
+    </form>
+
+
+    <script src="~/Scripts/angular.js"></script>
+
+    <script>
+        angular.module("CommPage", [])
+        .controller("FrmController", function ($scope, $http) {
+
+            $scope.comment = [];
+
+            $scope.btn_add = function () {
+                
+                $http.post('/Home/GetData', { json: $scope.txtcomment })
+                .then(function (res) {
+                    if (res.data.success) {
+                        $scope.comment.push($scope.txtcomment);
+                        $scope.txtcomment = "";
+                    }
+                    else {
+                        //alert('You`ve typed empty or the same comment that already exist!')
+                    }
+                });
+                
+            }
+
+            $scope.remItem = function ($index) {
+                $scope.comment.splice($index, 1);
+            }
+
+
+            $scope.voteUp = function ($event) {
+                Vote($event, '/Home/GetLike');
+            }
+
+            $scope.voteDown = function ($event) {
+                Vote($event, '/Home/GetDisLike');
+            }
+
+            function Vote (e, str) {
+
+                var prime = e.currentTarget;
+                var json = prime.parentNode;
+                json = previousElementSibling(json);
+                json = nextElementSibling(json.firstChild);
+
+                $http.post(str, {
+                    name: nextElementSibling(json).innerHTML,
+                    comm: nextElementSibling(nextElementSibling(nextElementSibling(json))).innerHTML
+                })
+                .then(function (res) {
+                    if (res.data.success == true) {
+                        previousElementSibling(prime).innerHTML =
+                    +(previousElementSibling(prime).innerHTML) + 1;
+                        document.getElementById('votesID').innerHTML =
+                            +(document.getElementById('votesID').innerHTML) - 1;
+                    }
+                    else if (res.data.success == false){
+                        previousElementSibling(prime).innerHTML =
+                    +(previousElementSibling(prime).innerHTML) - 1;
+                        document.getElementById('votesID').innerHTML =
+                        +(document.getElementById('votesID').innerHTML) + 1;
+                    }
+                });
+
+            }
+
+            function nextElementSibling(elem) {
+                do {
+                    elem = elem.nextSibling;
+                } while (elem && elem.nodeType !== 1);
+                return elem;
+            }
+
+            function previousElementSibling(elem) {
+                do {
+                    elem = elem.previousSibling;
+                } while (elem && elem.nodeType !== 1);
+                return elem;
+            }
+
+        });
+
+    </script>
+</div>
+
+}
+@section Scripts{
+    @Scripts.Render("~/bundles/knockout")
+    @Scripts.Render("~/bundles/app")
+    @Styles.Render("~/Content/comm")
+}
