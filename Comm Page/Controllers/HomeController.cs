@@ -21,9 +21,11 @@ namespace Comm_Page.Controllers
             var persCont = pc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
             if (persCont != null)
             {
-                if (DateTime.Today.DayOfYear > persCont.Visited.DayOfYear )
-                    if (DateTime.Today.DayOfYear % 3 == 0)
-                        persCont.LikesCount = persCont.LikesCount > 10 ? persCont.LikesCount + 1 : 10;
+                if (DateTime.Today.DayOfYear > persCont.Visited.DayOfYear)
+                    persCont.LikesCount += (DateTime.Today.DayOfYear - persCont.Visited.DayOfYear) / 3;
+                if (persCont.LikesCount > 10)
+                    persCont.LikesCount = 10;
+
                 persCont.Visited = DateTime.Now;
                 pc.SaveChanges();
             }
