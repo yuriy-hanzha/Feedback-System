@@ -77,14 +77,14 @@ namespace Comm_Page
                 clientId: "000000004818B650",
                 clientSecret: "RKL3adFJMdiHfTWsemAUDiiSMLo4QmuS");
 
-            app.UseTwitterAuthentication(
-                consumerKey: "HsfuhS9F1GmZ4777lGCJqZvse",
-                consumerSecret: "gIA29tazYztYvf9maMa7HtG278slnqHSnV619lzoGTewtRrrRI");
+            //app.UseTwitterAuthentication(
+            //    consumerKey: "HsfuhS9F1GmZ4777lGCJqZvse",
+            //    consumerSecret: "gIA29tazYztYvf9maMa7HtG278slnqHSnV619lzoGTewtRrrRI");
 
             app.UseTwitterAuthentication(new TwitterAuthenticationOptions
             {
-                ConsumerKey = "530359253792885",
-                ConsumerSecret = "6f777ae6178df2aa35ffc7018d412107",
+                ConsumerKey = "HsfuhS9F1GmZ4777lGCJqZvse",
+                ConsumerSecret = "gIA29tazYztYvf9maMa7HtG278slnqHSnV619lzoGTewtRrrRI",
                 BackchannelCertificateValidator = new CertificateSubjectKeyIdentifierValidator(new[]
                 {
                     "A5EF0B11CEC04103A34A659048B21CE0572D7D47", // VeriSign Class 3 Secure Server CA - G2
@@ -96,9 +96,9 @@ namespace Comm_Page
                 })
             });
 
-            //app.UseFacebookAuthentication(
-            //    appId: "530359253792885",
-            //    appSecret: "6f777ae6178df2aa35ffc7018d412107");
+            app.UseFacebookAuthentication(
+                appId: "530359253792885",
+                appSecret: "6f777ae6178df2aa35ffc7018d412107");
 
             app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
             {
