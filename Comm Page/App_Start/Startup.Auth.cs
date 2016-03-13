@@ -76,7 +76,7 @@ namespace Comm_Page
                 clientSecret: "RKL3adFJMdiHfTWsemAUDiiSMLo4QmuS");
 
             app.UseTwitterAuthentication(
-                consumerKey: "	nwISESs0o4sYqdfu9oepNALC0",
+                consumerKey: "nwISESs0o4sYqdfu9oepNALC0",
                 consumerSecret: "LKpVJlxz3m7lrOUiZ3g44T7rJzSj2aRdbNziIlf7s2Jjt0d3q4");
 
             app.UseFacebookAuthentication(
