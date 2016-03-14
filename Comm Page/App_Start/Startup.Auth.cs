@@ -97,8 +97,8 @@ namespace Comm_Page
             });
 
             app.UseFacebookAuthentication(
-                appId: "530359253792885",
-                appSecret: "6f777ae6178df2aa35ffc7018d412107");
+                appId: "1697344593868872",
+                appSecret: "212fcf968b14419f7b3896642925c446");
 
             app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
             {
