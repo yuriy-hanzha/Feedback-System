@@ -102,8 +102,8 @@ namespace Comm_Page
 
             app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
             {
-                ClientId = "712056922675-prt13ftrc2c3tfrpud6se6shmef26bdt.apps.googleusercontent.com",
-                ClientSecret = "iVkDwYPSUyMFqP9MKuNQwU__"
+                ClientId = "937495875843-nnner4lvrpiscv3n6vrbcc6ijnqf7n0k.apps.googleusercontent.com",
+                ClientSecret = "EYQ8-33XLBHHL2JQ6EfmvXS9"
             });
         }
     }
