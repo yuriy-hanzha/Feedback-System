@@ -2,14 +2,23 @@
 @{
     ViewBag.Title = "Manage";
 }
+<link href="~/Content/ng-img-crop.css" rel="stylesheet" />
+<style>
+    .cropArea {
+    background: #b5b1b1;
+    overflow: hidden;
+    width:350px;
+    height:350px;
+}
+</style>
 
 <h2>@ViewBag.Title.</h2>
-
 <p class="text-success">@ViewBag.StatusMessage</p>
-<div>
+<div ng-app="app" ng-controller="Ctrl">
     <h4>Change your account settings</h4>
     <hr />
     <dl class="dl-horizontal">
+
         <dt>Password:</dt>
         <dd>
             [
@@ -23,62 +32,68 @@
             }
             ]
         </dd>
-        @*<dt>External Logins:</dt>
-        <dd>
-            @Model.Logins.Count [
-            @Html.ActionLink("Manage", "ManageLogins") ]
-        </dd>*@
-        @*
-            Phone Numbers can used as a second factor of verification in a two-factor authentication system.
-             
-             See <a href="http://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                for details on setting up this ASP.NET application to support two-factor authentication using SMS.
-             
-             Uncomment the following block after you have set up two-factor authentication
-        *@
- 
-            <dt>Phone Number:</dt>
-            <dd>
-                @(Model.PhoneNumber ?? "None") [
-                @if (Model.PhoneNumber != null)
-                {
-                    @Html.ActionLink("Change", "AddPhoneNumber")
-                    @: &nbsp;|&nbsp;
-                    @Html.ActionLink("Remove", "RemovePhoneNumber")
-                }
-                else
-                {
-                    @Html.ActionLink("Add", "AddPhoneNumber")
-                }
-                ]
-            </dd>
 
-        @*<dt>Two-Factor Authentication:</dt>
+        <dt>Phone Number:</dt>
         <dd>
-            <p>
-                There are no two-factor authentication providers configured. See <a href="http://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                for details on setting up this ASP.NET application to support two-factor authentication.
-            </p>*@
-            @*@if (Model.TwoFactor)
-                {
-                    using (Html.BeginForm("DisableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        <text>Enabled
-                        <input type="submit" value="Disable" class="btn btn-link" />
-                        </text>
-                    }
-                }
-                else
-                {
-                    using (Html.BeginForm("EnableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        <text>Disabled
-                        <input type="submit" value="Enable" class="btn btn-link" />
-                        </text>
-                    }
-                }
-        </dd>*@
+            @(Model.PhoneNumber ?? "None") [
+            @if (Model.PhoneNumber != null)
+            {
+                @Html.ActionLink("Change", "AddPhoneNumber")
+                @: &nbsp;|&nbsp;
+                @Html.ActionLink("Remove", "RemovePhoneNumber")
+            }
+            else
+            {
+                @Html.ActionLink("Add", "AddPhoneNumber")
+            }
+            ]
+        </dd>
+
+        <dt>Avatar:</dt>
+        <dd>
+            <input id="fileInput" type="file" accept="image/*" ng-click="avatarFiledShow()" />
+            <div style="margin-top:10px; visibility:hidden" id="avatarDiv">
+                <div style="float:left" class="cropArea">
+                    <img-crop id="stockImg" change-on-fly="true" area-type="square" image="myImage" result-image="myCroppedImage"></img-crop>
+                </div>
+                <div style="float:left; margin-left:10px"><img ng-src="{{myCroppedImage}}" /></div>
+                <button style="float:left; clear:left; margin:5px" class="btn btn-default" ng-click="saveImg()">Save</button>
+                <button style="float:left; clear:right; margin:5px" class="btn btn-default" ng-click="CanselImg()">Cansel</button>
+            </div>
+        </dd>
     </dl>
 </div>
+
+<script src="~/Scripts/ng-img-crop.js"></script>
+<script>
+    angular.module('app', ['ngImgCrop'])
+  .controller('Ctrl', function ($scope, $http) {
+      $scope.myImage = '';
+      $scope.myCroppedImage = '';
+
+      var handleFileSelect = function (evt) {
+          var file = evt.currentTarget.files[0];
+          var reader = new FileReader();
+          reader.onload = function (evt) {
+              $scope.$apply(function ($scope) {
+                  $scope.myImage = evt.target.result;
+              });
+          };
+          reader.readAsDataURL(file);
+      };
+      angular.element(document.querySelector('#fileInput')).on('change', handleFileSelect);
+
+      $scope.saveImg = function () {
+          $http.post('/Manage/SaveImg', { img: $scope.myCroppedImage });
+          document.getElementById("avatarDiv").style.visibility = "hidden";
+      }
+      $scope.avatarFiledShow = function () {
+          document.getElementById("avatarDiv").style.visibility = "visible";
+      }
+
+      $scope.CanselImg = function () {
+          document.getElementById("avatarDiv").style.visibility = "hidden";
+      }
+  });
+
+</script>

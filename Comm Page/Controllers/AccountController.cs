@@ -163,7 +163,7 @@ namespace Comm_Page.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Hometown = model.Hometown };
+                var user = new ApplicationUser { UserName = model.UserName, Email = model.Email, Hometown = model.Hometown };
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -352,6 +352,17 @@ namespace Comm_Page.Controllers
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
                 case SignInStatus.Failure:
                 default:
+                    
+                    var mod = new ExternalLoginConfirmationViewModel {
+                        UserName = loginInfo.DefaultUserName, 
+                        Email = loginInfo.Email, 
+                        Hometown=" "};
+                    //my code snippet
+                    if(ModelState.IsValid)
+                    {
+                        await ExternalLoginConfirmation(mod, returnUrl);
+                    }
+
                     // If the user does not have an account, then prompt the user to create an account
                     ViewBag.ReturnUrl = returnUrl;
                     ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
@@ -379,7 +390,7 @@ namespace Comm_Page.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Hometown = model.Hometown };
+                var user = new ApplicationUser { UserName = model.UserName, Email = model.Email, Hometown = " " };
                 var result = await UserManager.CreateAsync(user);
                 if (result.Succeeded)
                 {

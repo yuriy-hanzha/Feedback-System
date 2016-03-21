@@ -1,6 +1,7 @@
 ﻿@section Index {
 
 @model IEnumerable<Comm_Page.Models.Comment>
+@Styles.Render("~/Content/comm")
 <div ng-app="CommPage">
     <form ng-controller="FrmController">
         <p id="votesID" style=" font-size:large; color:gray; position:fixed; float:right">@ViewBag.votes</p>
@@ -10,13 +11,11 @@
         </div>
         <div class="dv1">
             <ul style="margin-top:30px">
-
-
                 @foreach (var item in Model)
                 {
                     <li style="margin:20px 0">
                         <div>
-                            <img style="width:60px; margin-right:10px" align="left" src="~/Content/Images/avatar.png" />
+                            <img style="width:60px; margin-right:10px" align="left" ng-src=@item.person.Avatar />
                             <b>@item.Name</b><br />
                             @if (item.Like - item.Dislike > 0)
                             {<p style="color:green">@item.CommentText</p>}
@@ -38,7 +37,7 @@
 
                 <li ng-repeat="comm in comment" style="margin:20px 0">
                     <div>
-                        <img style="width:60px; margin-right:10px" align="left" src="~/Content/Images/avatar.png" />
+                        <img style="width:60px; margin-right:10px" align="left" ng-src=@ViewBag.avatar />
                         <b>@User.Identity.Name</b><br />
                         <p>{{comm}}</p>
                         <!--<a style="float: right;" href="" ng-click="remItem($index)">x</a>-->
@@ -58,9 +57,6 @@
         </div>
 
     </form>
-
-
-    <script src="~/Scripts/angular.js"></script>
 
     <script>
         angular.module("CommPage", [])
@@ -86,7 +82,6 @@
             $scope.remItem = function ($index) {
                 $scope.comment.splice($index, 1);
             }
-
 
             $scope.voteUp = function ($event) {
                 Vote($event, '/Home/GetLike');
@@ -147,5 +142,4 @@
 @section Scripts{
     @Scripts.Render("~/bundles/knockout")
     @Scripts.Render("~/bundles/app")
-    @Styles.Render("~/Content/comm")
 }

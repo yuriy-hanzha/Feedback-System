@@ -12,13 +12,12 @@ namespace Comm_Page.Controllers
     [Authorize]
     public class HomeController : Controller
     {
-        CommentsContext cc = new CommentsContext();
-        PeopleContext pc = new PeopleContext();
+        MyContext mc = new MyContext();
 
 
         public ActionResult Index()
         {
-            var persCont = pc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
+            var persCont = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
             if (persCont != null)
             {
                 if (DateTime.Today.DayOfYear > persCont.Visited.DayOfYear)
@@ -27,25 +26,35 @@ namespace Comm_Page.Controllers
                     persCont.LikesCount = 10;
 
                 persCont.Visited = DateTime.Now;
-                pc.SaveChanges();
+                mc.SaveChanges();
             }
             else
             {
                 persCont = new Person
                     {
-                        ID = Guid.NewGuid().ToString(),
+                        PersonID = Guid.NewGuid().ToString(),
                         Name = User.Identity.Name,
                         LikesCount = 10,
-                        Visited = DateTime.Now
+                        Visited = DateTime.Now,
+                        Avatar = "/Content/Images/avatar.png"
                     };
-                pc.People.Add(persCont);
-                pc.SaveChanges();
+                mc.People.Add(persCont);
+                mc.SaveChanges();
             }
 
-            var commCont = from comm in cc.Comments
-                           orderby comm.Like - comm.Dislike descending
-                           select comm;
+            var commCont = (from comm in mc.Comments
+                            orderby comm.Like - comm.Dislike descending
+                            select comm).ToList();
+
+            for (int i = 0; i < commCont.Count; i++)
+            {
+                var c = commCont[i];
+                c.person = mc.People.Where(x => x.PersonID == c.PersonID).FirstOrDefault();
+            }
+                
+
             ViewBag.votes = persCont.LikesCount;
+            ViewBag.avatar = persCont.Avatar;
 
             return View(commCont.ToList());
         }
@@ -54,22 +63,24 @@ namespace Comm_Page.Controllers
         [System.Web.Http.HttpPost]
         public JsonResult GetData(string json)
         {
+            var prsn = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
             if(json != null && json != "")
             {
-                foreach (var i in cc.Comments)
+                foreach (var i in mc.Comments)
                     if(json == i.CommentText && User.Identity.Name == i.Name) 
                         return Json(new { success = false });
 
                 var c = new Comment
                 {
-                    ID = Guid.NewGuid().ToString(),
+                    CommentID = Guid.NewGuid().ToString(),
                     Name = User.Identity.Name,
                     CommentText = json,
                     Like = 0,
-                    Dislike = 0
+                    Dislike = 0,
+                    PersonID = prsn.PersonID
                 };
-                cc.Comments.Add(c);
-                cc.SaveChanges();
+                mc.Comments.Add(c);
+                mc.SaveChanges();
 
                 return Json(new { success = true });
             }
@@ -80,8 +91,8 @@ namespace Comm_Page.Controllers
 
         public JsonResult GetLike(string name, string comm)
         {
-            var persCont = pc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
-            var obj = cc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
+            var persCont = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
+            var obj = mc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
 
             if (obj.dislikedBy != null && obj.dislikedBy.Contains(User.Identity.Name) || persCont.LikesCount < 1)
                 return Json(new { });
@@ -92,11 +103,11 @@ namespace Comm_Page.Controllers
                 {
                     obj.Like--;
                     obj.likedBy = obj.likedBy.Replace(User.Identity.Name + "; ", "");
-                    cc.SaveChanges();
+                    mc.SaveChanges();
 
                     persCont.LikesCount = persCont.LikesCount < 10 ? persCont.LikesCount + 1 : 10;
                     ViewBag.votes = persCont.LikesCount;
-                    pc.SaveChanges();
+                    mc.SaveChanges();
                     return Json(new { success = false });
                 }
                 obj.Like++;
@@ -115,8 +126,8 @@ namespace Comm_Page.Controllers
 
         public JsonResult GetDisLike(string name, string comm)
         {
-            var persCont = pc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
-            var obj = cc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
+            var persCont = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
+            var obj = mc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
 
             if (obj.likedBy != null && obj.likedBy.Contains(User.Identity.Name) || persCont.LikesCount < 1)
                 return Json(new { });
@@ -127,11 +138,11 @@ namespace Comm_Page.Controllers
                 {
                     obj.Dislike--;
                     obj.dislikedBy = obj.dislikedBy.Replace(User.Identity.Name + "; ", "");
-                    cc.SaveChanges();
+                    mc.SaveChanges();
 
                     persCont.LikesCount = persCont.LikesCount < 10 ? persCont.LikesCount + 1 : 10;
                     ViewBag.votes = persCont.LikesCount;
-                    pc.SaveChanges();
+                    mc.SaveChanges();
                     return Json(new { success = false });
                 }
                 obj.Dislike++;
@@ -150,63 +161,15 @@ namespace Comm_Page.Controllers
 
         private void SaveVotes(Person persCont)
         {
-            cc.SaveChanges();
-
             persCont.LikesCount--;
             ViewBag.votes = persCont.LikesCount;
-            pc.SaveChanges();
+            mc.SaveChanges();
         }
 
         protected override void Dispose(bool disposing)
         {
-            cc.Dispose();
-            pc.Dispose();
+            mc.Dispose();
             base.Dispose(disposing);
         }
     }
 }
-
-//public JsonResult GetLike(string name, string comm)
-//{
-//    var obj = cc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
-//    return VoteCalc(obj.Like, obj.Dislike, obj.likedBy, obj.dislikedBy);
-//}
-
-//public JsonResult GetDisLike(string name, string comm)
-//{
-
-//    var obj = cc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
-//    return VoteCalc(obj.Dislike, obj.Like, obj.dislikedBy, obj.likedBy);
-//}
-//public JsonResult VoteCalc(int vote1, int vote2, string voted1, string voted2)
-//{
-//    var persCont = pc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
-//    if (voted2 != null && voted2.Contains(User.Identity.Name) || persCont.LikesCount < 1)
-//        return Json(new { });
-
-//    if (voted1 != null && voted1 != "")
-//    {
-//        if (voted1.Contains(User.Identity.Name))
-//        {
-//            vote1--;
-//            voted1 = voted1.Replace(User.Identity.Name + "; ", "");
-//            cc.SaveChanges();
-
-//            persCont.LikesCount = persCont.LikesCount < 10 ? persCont.LikesCount + 1 : 10;
-//            ViewBag.votes = persCont.LikesCount;
-//            pc.SaveChanges();
-//            return Json(new { success = false });
-//        }
-//        vote1++;
-//        voted1 += User.Identity.Name + "; ";
-//        SaveVotes(persCont);
-//        return Json(new { success = true });
-//    }
-//    else
-//    {
-//        vote2++;
-//        voted1 = User.Identity.Name + "; ";
-//        SaveVotes(persCont);
-//        return Json(new { success = true });
-//    }
-//}

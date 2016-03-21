@@ -7,12 +7,17 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Comm_Page.Models;
+using System.Collections.Generic;
+using System.IO;
+using System.Web.Helpers;
+using System.Drawing;
 
 namespace Comm_Page.Controllers
 {
     [Authorize]
     public class ManageController : Controller
     {
+        #region Standart Management
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
@@ -383,5 +388,17 @@ namespace Comm_Page.Controllers
         }
 
         #endregion
+        #endregion
+
+        [HttpPost]
+        public void SaveImg(string img)
+        {
+            //img = img.Substring(img.IndexOf(',') + 1);
+
+            MyContext mc = new MyContext();
+            var man = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
+            man.Avatar = img;
+            mc.SaveChanges();
+        }
     }
 }
