@@ -361,6 +361,7 @@ namespace Comm_Page.Controllers
                     if(ModelState.IsValid)
                     {
                         await ExternalLoginConfirmation(mod, returnUrl);
+                        return View(mod);
                     }
 
                     // If the user does not have an account, then prompt the user to create an account
