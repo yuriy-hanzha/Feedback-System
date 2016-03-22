@@ -358,7 +358,7 @@ namespace Comm_Page.Controllers
                         Email = loginInfo.Email, 
                         Hometown=" "};
                     //my code snippet
-                    if(ModelState.IsValid)
+                    if(mod.UserName != null && mod.Email != null)
                     {
                         return await ExternalLoginConfirmation(mod, returnUrl);
                     }
