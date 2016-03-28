@@ -109,8 +109,6 @@ namespace Comm_Page
             facebookOptions.BackchannelHttpHandler = new FacebookBackChannelHandler();
             facebookOptions.UserInformationEndpoint = "https://graph.facebook.com/v2.4/me?fields=id,name,email,first_name,last_name,location";
             app.UseFacebookAuthentication(facebookOptions);
-
-
         }
     }
     public class FacebookBackChannelHandler : HttpClientHandler
