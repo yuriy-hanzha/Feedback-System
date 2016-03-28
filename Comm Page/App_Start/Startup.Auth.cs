@@ -1,10 +1,8 @@
 ﻿using System;
 using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
-using Microsoft.Owin.Security.DataProtection;
 using Microsoft.Owin.Security.Google;
 using Microsoft.Owin.Security.OAuth;
 using Owin;
@@ -12,6 +10,9 @@ using Comm_Page.Models;
 using Comm_Page.Providers;
 using Microsoft.Owin.Security.Twitter;
 using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.Facebook;
+using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace Comm_Page
 {
@@ -77,9 +78,11 @@ namespace Comm_Page
                 clientId: "000000004818B650",
                 clientSecret: "RKL3adFJMdiHfTWsemAUDiiSMLo4QmuS");
 
-            //app.UseTwitterAuthentication(
-            //    consumerKey: "HsfuhS9F1GmZ4777lGCJqZvse",
-            //    consumerSecret: "gIA29tazYztYvf9maMa7HtG278slnqHSnV619lzoGTewtRrrRI");
+            app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
+            {
+                ClientId = "937495875843-nnner4lvrpiscv3n6vrbcc6ijnqf7n0k.apps.googleusercontent.com",
+                ClientSecret = "EYQ8-33XLBHHL2JQ6EfmvXS9"
+            });
 
             app.UseTwitterAuthentication(new TwitterAuthenticationOptions
             {
@@ -96,15 +99,31 @@ namespace Comm_Page
                 })
             });
 
-            app.UseFacebookAuthentication(
-                appId: "1697344593868872",
-                appSecret: "212fcf968b14419f7b3896642925c446");
 
-            app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
+            var facebookOptions = new FacebookAuthenticationOptions()
             {
-                ClientId = "937495875843-nnner4lvrpiscv3n6vrbcc6ijnqf7n0k.apps.googleusercontent.com",
-                ClientSecret = "EYQ8-33XLBHHL2JQ6EfmvXS9"
-            });
+                AppId = "1697344593868872",
+                AppSecret = "212fcf968b14419f7b3896642925c446"
+            };
+            facebookOptions.Scope.Add("email");
+            facebookOptions.BackchannelHttpHandler = new FacebookBackChannelHandler();
+            facebookOptions.UserInformationEndpoint = "https://graph.facebook.com/v2.4/me?fields=id,name,email,first_name,last_name,location";
+            app.UseFacebookAuthentication(facebookOptions);
+
+
+        }
+    }
+    public class FacebookBackChannelHandler : HttpClientHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        {
+            // Replace the RequestUri so it's not malformed
+            if (!request.RequestUri.AbsolutePath.Contains("/oauth"))
+            {
+                request.RequestUri = new Uri(request.RequestUri.AbsoluteUri.Replace("?access_token", "&access_token"));
+            }
+
+            return await base.SendAsync(request, cancellationToken);
         }
     }
 }

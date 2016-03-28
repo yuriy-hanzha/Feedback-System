@@ -17,9 +17,11 @@ namespace Comm_Page.Controllers
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
+        private CPContext cpCont;
 
         public AccountController()
         {
+            cpCont = new CPContext();
         }
 
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
@@ -164,6 +166,7 @@ namespace Comm_Page.Controllers
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser { UserName = model.UserName, Email = model.Email, Hometown = model.Hometown };
+                
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -174,6 +177,8 @@ namespace Comm_Page.Controllers
                     // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
                     // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
                     // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
+
+                    SaveCustomData(user.UserName);
 
                     return RedirectToAction("Index", "Home");
                 }
@@ -446,6 +451,24 @@ namespace Comm_Page.Controllers
             base.Dispose(disposing);
         }
 
+        private void SaveCustomData(string name)
+        {
+            //Saving new registered user data to custom DB tables
+            var persCont = cpCont.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
+            if (persCont == null)
+            {
+                persCont = new Person
+                {
+                    PersonID = Guid.NewGuid().ToString(),
+                    Name = name,
+                    LikesCount = 10,
+                    Visited = DateTime.Now,
+                    Avatar = "/Content/Images/avatar.png"
+                };
+                cpCont.People.Add(persCont);
+                cpCont.SaveChanges();
+            }
+        }
         #region Helpers
         // Used for XSRF protection when adding external logins
         private const string XsrfKey = "XsrfId";

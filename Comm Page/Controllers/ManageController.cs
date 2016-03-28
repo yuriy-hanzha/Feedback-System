@@ -395,7 +395,7 @@ namespace Comm_Page.Controllers
         {
             //img = img.Substring(img.IndexOf(',') + 1);
 
-            MyContext mc = new MyContext();
+            CPContext mc = new CPContext();
             var man = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
             man.Avatar = img;
             mc.SaveChanges();

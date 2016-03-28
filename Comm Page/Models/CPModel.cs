@@ -32,9 +32,9 @@ namespace Comm_Page.Models
         public string Avatar { get; set; }
     }
 
-    public class MyContext : DbContext
+    public class CPContext : DbContext
     {
-        public MyContext ()
+        public CPContext ()
             : base("DefaultConnection")
         {
         }

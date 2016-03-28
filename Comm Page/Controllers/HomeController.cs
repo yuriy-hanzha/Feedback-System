@@ -12,8 +12,12 @@ namespace Comm_Page.Controllers
     [Authorize]
     public class HomeController : Controller
     {
-        MyContext mc = new MyContext();
+        CPContext mc;
 
+        public HomeController()
+        {
+            mc = new CPContext();
+        }
 
         public ActionResult Index()
         {
