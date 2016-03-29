@@ -13,6 +13,8 @@ using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Facebook;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace Comm_Page
 {
@@ -96,7 +98,18 @@ namespace Comm_Page
                     "39A55D933676616E73A761DFA16A7E59CDE66FAD", // Symantec Class 3 Secure Server CA - G4
                     "5168FF90AF0207753CCCD9656462A212B859723B", //DigiCert SHA2 High Assurance Server C‎A 
                     "B13EC36903F8BF4701D498261A0802EF63642BC3" //DigiCert High Assurance EV Root CA
-                })
+                }),
+                SignInAsAuthenticationType = DefaultAuthenticationTypes.ExternalCookie,
+                Provider = new TwitterAuthenticationProvider()
+                {
+                    OnAuthenticated = (context) =>
+                    {
+                        context.Identity.AddClaim(new System.Security.Claims.Claim("urn:twitter:access_token", context.AccessToken));
+                        context.Identity.AddClaim(new System.Security.Claims.Claim("urn:tokens:twitter:accesstoken", context.AccessToken));
+                        context.Identity.AddClaim(new System.Security.Claims.Claim("urn:tokens:twitter:accesstokensecret", context.AccessTokenSecret));
+                        return Task.FromResult(0);
+                    }
+                }
             });
 
 

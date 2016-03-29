@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Security;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
@@ -363,7 +363,7 @@ namespace Comm_Page.Controllers
                         Email = loginInfo.Email, 
                         Hometown=" "};
                     //my code snippet
-                    if(mod.UserName != null && mod.Email != null)
+                    if(IsValid(mod))
                     {
                         return await ExternalLoginConfirmation(mod, returnUrl);
                     }
@@ -371,7 +371,7 @@ namespace Comm_Page.Controllers
                     // If the user does not have an account, then prompt the user to create an account
                     ViewBag.ReturnUrl = returnUrl;
                     ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
-                    return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
+                    return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email, UserName = loginInfo.DefaultUserName});
             }
         }
 
@@ -454,7 +454,7 @@ namespace Comm_Page.Controllers
         private void SaveCustomData(string name)
         {
             //Saving new registered user data to custom DB tables
-            var persCont = cpCont.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
+            var persCont = cpCont.People.FirstOrDefault(p => p.Name == User.Identity.Name);
             if (persCont == null)
             {
                 persCont = new Person
@@ -468,6 +468,20 @@ namespace Comm_Page.Controllers
                 cpCont.People.Add(persCont);
                 cpCont.SaveChanges();
             }
+        }
+
+        private bool IsValid(ExternalLoginConfirmationViewModel mod)
+        {
+
+            var db = new ApplicationDbContext();
+
+            var nameList = db.Users.Select(u => u.UserName).ToList();
+            var emailList = db.Users.Select(u => u.Email).ToList();
+
+            var name = db.Users.FirstOrDefault(u => u.UserName == mod.UserName);
+            var email = db.Users.FirstOrDefault(u => u.Email == mod.Email);
+            return
+                !string.IsNullOrEmpty(mod.UserName) && !string.IsNullOrEmpty(mod.Email) && email == null && name == null;
         }
         #region Helpers
         // Used for XSRF protection when adding external logins

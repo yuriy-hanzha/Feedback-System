@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using Comm_Page.Models;
 
@@ -21,7 +17,7 @@ namespace Comm_Page.Controllers
 
         public ActionResult Index()
         {
-            var persCont = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
+            var persCont = mc.People.FirstOrDefault(p => p.Name == User.Identity.Name);
             if (persCont != null)
             {
                 if (DateTime.Today.DayOfYear > persCont.Visited.DayOfYear)
@@ -53,7 +49,7 @@ namespace Comm_Page.Controllers
             for (int i = 0; i < commCont.Count; i++)
             {
                 var c = commCont[i];
-                c.person = mc.People.Where(x => x.PersonID == c.PersonID).FirstOrDefault();
+                c.person = mc.People.FirstOrDefault(x => x.PersonID == c.PersonID);
             }
                 
 
@@ -67,8 +63,8 @@ namespace Comm_Page.Controllers
         [System.Web.Http.HttpPost]
         public JsonResult GetData(string json)
         {
-            var prsn = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
-            if(json != null && json != "")
+            var prsn = mc.People.FirstOrDefault(p => p.Name == User.Identity.Name);
+            if(!string.IsNullOrEmpty(json))
             {
                 foreach (var i in mc.Comments)
                     if(json == i.CommentText && User.Identity.Name == i.Name) 
@@ -95,13 +91,13 @@ namespace Comm_Page.Controllers
 
         public JsonResult GetLike(string name, string comm)
         {
-            var persCont = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
-            var obj = mc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
+            var persCont = mc.People.FirstOrDefault(p => p.Name == User.Identity.Name);
+            var obj = mc.Comments.FirstOrDefault(c => c.Name == name && c.CommentText == comm);
 
             if (obj.dislikedBy != null && obj.dislikedBy.Contains(User.Identity.Name) || persCont.LikesCount < 1)
                 return Json(new { });
 
-            if (obj.likedBy != null && obj.likedBy != "")
+            if (!string.IsNullOrEmpty(obj.likedBy))
             {
                 if (obj.likedBy.Contains(User.Identity.Name))
                 {
@@ -130,13 +126,13 @@ namespace Comm_Page.Controllers
 
         public JsonResult GetDisLike(string name, string comm)
         {
-            var persCont = mc.People.Where(p => p.Name == User.Identity.Name).FirstOrDefault();
-            var obj = mc.Comments.Where(c => c.Name == name && c.CommentText == comm).FirstOrDefault();
+            var persCont = mc.People.FirstOrDefault(p => p.Name == User.Identity.Name);
+            var obj = mc.Comments.FirstOrDefault(c => c.Name == name && c.CommentText == comm);
 
             if (obj.likedBy != null && obj.likedBy.Contains(User.Identity.Name) || persCont.LikesCount < 1)
                 return Json(new { });
 
-            if (obj.dislikedBy != null && obj.dislikedBy != "")
+            if (!string.IsNullOrEmpty(obj.dislikedBy))
             {
                 if (obj.dislikedBy.Contains(User.Identity.Name))
                 {
