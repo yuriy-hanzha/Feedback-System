@@ -357,11 +357,13 @@ namespace Comm_Page.Controllers
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
                 case SignInStatus.Failure:
                 default:
-                    
-                    var mod = new ExternalLoginConfirmationViewModel {
-                        UserName = loginInfo.DefaultUserName, 
-                        Email = loginInfo.Email, 
-                        Hometown=" "};
+
+                    var mod = new ExternalLoginConfirmationViewModel
+                    {
+                        UserName = loginInfo.DefaultUserName,
+                        Email = loginInfo.Email,
+                        Hometown = " "
+                    };
                     //my code snippet
                     if(IsValid(mod))
                     {
