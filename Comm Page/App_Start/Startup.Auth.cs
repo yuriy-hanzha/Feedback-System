@@ -8,13 +8,10 @@ using Microsoft.Owin.Security.OAuth;
 using Owin;
 using Comm_Page.Models;
 using Comm_Page.Providers;
-using Microsoft.Owin.Security.Twitter;
-using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Facebook;
 using System.Threading.Tasks;
 using System.Net.Http;
-using System.Collections.Generic;
-using System.Security.Claims;
+using Microsoft.Owin.Security.MicrosoftAccount;
 
 namespace Comm_Page
 {
@@ -47,6 +44,7 @@ namespace Comm_Page
             app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
             app.CreatePerOwinContext<ApplicationSignInManager>(ApplicationSignInManager.Create);
 
+            const string XmlSchemaString = "http://www.w3.org/2001/XMLSchema#string";
             // Enable the application to use a cookie to store information for the signed in user
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
@@ -76,9 +74,14 @@ namespace Comm_Page
             app.UseOAuthBearerTokens(OAuthOptions);
 
             // Uncomment the following lines to enable logging in with third party login providers
-            app.UseMicrosoftAccountAuthentication(
-                clientId: "000000004818B650",
-                clientSecret: "RKL3adFJMdiHfTWsemAUDiiSMLo4QmuS");
+            var  mo =  new MicrosoftAccountAuthenticationOptions() {
+                ClientId = "000000004818B650",
+                ClientSecret = "RKL3adFJMdiHfTWsemAUDiiSMLo4QmuS"
+            };
+            mo.Scope.Add("wl.basic");
+            mo.Scope.Add("wl.emails");
+            app.UseMicrosoftAccountAuthentication(mo);
+
 
             app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
             {
@@ -86,31 +89,59 @@ namespace Comm_Page
                 ClientSecret = "EYQ8-33XLBHHL2JQ6EfmvXS9"
             });
 
-            app.UseTwitterAuthentication(new TwitterAuthenticationOptions
+            //app.UseTwitterAuthentication(new TwitterAuthenticationOptions
+            //{
+            //    ConsumerKey = "HsfuhS9F1GmZ4777lGCJqZvse",
+            //    ConsumerSecret = "gIA29tazYztYvf9maMa7HtG278slnqHSnV619lzoGTewtRrrRI",
+            //    BackchannelCertificateValidator = new CertificateSubjectKeyIdentifierValidator(new[]
+            //    {
+            //        "A5EF0B11CEC04103A34A659048B21CE0572D7D47", // VeriSign Class 3 Secure Server CA - G2
+            //        "0D445C165344C1827E1D20AB25F40163D8BE79A5", // VeriSign Class 3 Secure Server CA - G3
+            //        "7FD365A7C2DDECBBF03009F34339FA02AF333133", // VeriSign Class 3 Public Primary Certification Authority - G5
+            //        "39A55D933676616E73A761DFA16A7E59CDE66FAD", // Symantec Class 3 Secure Server CA - G4
+            //        "5168FF90AF0207753CCCD9656462A212B859723B", //DigiCert SHA2 High Assurance Server C‎A 
+            //        "B13EC36903F8BF4701D498261A0802EF63642BC3" //DigiCert High Assurance EV Root CA
+            //    }),
+            //    SignInAsAuthenticationType = DefaultAuthenticationTypes.ExternalCookie,
+            //    Provider = new TwitterAuthenticationProvider()
+            //    {
+            //        OnAuthenticated = (context) =>
+            //        {
+            //            context.Identity.AddClaim(new System.Security.Claims.Claim("urn:twitter:access_token", context.AccessToken, XmlSchemaString, "Twitter"));
+            //            context.Identity.AddClaim(new System.Security.Claims.Claim("urn:tokens:twitter:accesstoken", context.AccessToken));
+            //            context.Identity.AddClaim(new System.Security.Claims.Claim("urn:tokens:twitter:accesstokensecret", context.AccessTokenSecret));
+            //            return Task.FromResult(0);
+            //        }
+            //    }
+            //});
+            var twitterOptions = new Microsoft.Owin.Security.Twitter.TwitterAuthenticationOptions()
             {
                 ConsumerKey = "HsfuhS9F1GmZ4777lGCJqZvse",
                 ConsumerSecret = "gIA29tazYztYvf9maMa7HtG278slnqHSnV619lzoGTewtRrrRI",
-                BackchannelCertificateValidator = new CertificateSubjectKeyIdentifierValidator(new[]
-                {
-                    "A5EF0B11CEC04103A34A659048B21CE0572D7D47", // VeriSign Class 3 Secure Server CA - G2
-                    "0D445C165344C1827E1D20AB25F40163D8BE79A5", // VeriSign Class 3 Secure Server CA - G3
-                    "7FD365A7C2DDECBBF03009F34339FA02AF333133", // VeriSign Class 3 Public Primary Certification Authority - G5
-                    "39A55D933676616E73A761DFA16A7E59CDE66FAD", // Symantec Class 3 Secure Server CA - G4
-                    "5168FF90AF0207753CCCD9656462A212B859723B", //DigiCert SHA2 High Assurance Server C‎A 
-                    "B13EC36903F8BF4701D498261A0802EF63642BC3" //DigiCert High Assurance EV Root CA
-                }),
-                SignInAsAuthenticationType = DefaultAuthenticationTypes.ExternalCookie,
-                Provider = new TwitterAuthenticationProvider()
+                Provider = new Microsoft.Owin.Security.Twitter.TwitterAuthenticationProvider
                 {
                     OnAuthenticated = (context) =>
                     {
                         context.Identity.AddClaim(new System.Security.Claims.Claim("urn:twitter:access_token", context.AccessToken));
-                        context.Identity.AddClaim(new System.Security.Claims.Claim("urn:tokens:twitter:accesstoken", context.AccessToken));
-                        context.Identity.AddClaim(new System.Security.Claims.Claim("urn:tokens:twitter:accesstokensecret", context.AccessTokenSecret));
+                        context.Identity.AddClaim(new System.Security.Claims.Claim("urn:twitter:access_secret", context.AccessTokenSecret));
                         return Task.FromResult(0);
                     }
-                }
-            });
+                },
+                BackchannelCertificateValidator = new Microsoft.Owin.Security.CertificateSubjectKeyIdentifierValidator(new[]
+                {
+                   "A5EF0B11CEC04103A34A659048B21CE0572D7D47", // VeriSign Class 3 Secure Server CA - G2
+                   "0D445C165344C1827E1D20AB25F40163D8BE79A5", // VeriSign Class 3 Secure Server CA - G3
+                   "7FD365A7C2DDECBBF03009F34339FA02AF333133", // VeriSign Class 3 Public Primary Certification Authority - G5
+                   "39A55D933676616E73A761DFA16A7E59CDE66FAD", // Symantec Class 3 Secure Server CA - G4
+                   "‎add53f6680fe66e383cbac3e60922e3b4c412bed", // Symantec Class 3 EV SSL CA - G3
+                   "4eb6d578499b1ccf5f581ead56be3d9b6744a5e5", // VeriSign Class 3 Primary CA - G5
+                   "5168FF90AF0207753CCCD9656462A212B859723B", // DigiCert SHA2 High Assurance Server C‎A 
+                   "B13EC36903F8BF4701D498261A0802EF63642BC3" // DigiCert High Assurance EV Root CA
+                }),
+                CallbackPath = new PathString("/twitter/account/ExternalLoginCallback")
+            };
+            app.UseTwitterAuthentication(twitterOptions);
+
 
 
             var facebookOptions = new FacebookAuthenticationOptions()

@@ -9,6 +9,12 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Comm_Page.Models;
+using System.Configuration;
+using System.IO;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace Comm_Page.Controllers
 {
@@ -344,7 +350,14 @@ namespace Comm_Page.Controllers
             {
                 return RedirectToAction("Login");
             }
-
+            if (loginInfo.Login.LoginProvider.ToLower() == "twitter")
+            {
+                string access_token = loginInfo.ExternalIdentity.Claims.Where(x => x.Type == "urn:twitter:access_token").Select(x => x.Value).FirstOrDefault();
+                string access_secret = loginInfo.ExternalIdentity.Claims.Where(x => x.Type == "urn:twitter:access_secret").Select(x => x.Value).FirstOrDefault();
+                TwitterDto response = TwitterLogin(access_token, access_secret, "HsfuhS9F1GmZ4777lGCJqZvse", "gIA29tazYztYvf9maMa7HtG278slnqHSnV619lzoGTewtRrrRI");
+                // by now response.email should possess the email value you need
+                loginInfo.Email = response.email;
+            }
             // Sign in the user with this external login provider if the user already has a login
             var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
             switch (result)
@@ -485,6 +498,72 @@ namespace Comm_Page.Controllers
             return
                 !string.IsNullOrEmpty(mod.UserName) && !string.IsNullOrEmpty(mod.Email) && email == null && name == null;
         }
+
+        public static TwitterDto TwitterLogin(string oauth_token, string oauth_token_secret, string oauth_consumer_key, string oauth_consumer_secret)
+        {
+            // oauth implementation details
+            var oauth_version = "1.0";
+            var oauth_signature_method = "HMAC-SHA1";
+
+            // unique request details
+            var oauth_nonce = Convert.ToBase64String(
+                new ASCIIEncoding().GetBytes(DateTime.Now.Ticks.ToString()));
+            var timeSpan = DateTime.UtcNow
+                - new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            var oauth_timestamp = Convert.ToInt64(timeSpan.TotalSeconds).ToString();
+
+            var resource_url = "https://api.twitter.com/1.1/account/verify_credentials.json";
+            var request_query = "include_email=true";
+            // create oauth signature
+            var baseFormat = "oauth_consumer_key={0}&oauth_nonce={1}&oauth_signature_method={2}" +
+                            "&oauth_timestamp={3}&oauth_token={4}&oauth_version={5}";
+
+            var baseString = string.Format(baseFormat,
+                                        oauth_consumer_key,
+                                        oauth_nonce,
+                                        oauth_signature_method,
+                                        oauth_timestamp,
+                                        oauth_token,
+                                        oauth_version
+                                        );
+
+            baseString = string.Concat("GET&", Uri.EscapeDataString(resource_url) + "&" + Uri.EscapeDataString(request_query), "%26", Uri.EscapeDataString(baseString));
+
+            var compositeKey = string.Concat(Uri.EscapeDataString(oauth_consumer_secret),
+                                    "&", Uri.EscapeDataString(oauth_token_secret));
+
+            string oauth_signature;
+            using (HMACSHA1 hasher = new HMACSHA1(ASCIIEncoding.ASCII.GetBytes(compositeKey)))
+            {
+                oauth_signature = Convert.ToBase64String(
+                    hasher.ComputeHash(ASCIIEncoding.ASCII.GetBytes(baseString)));
+            }
+
+            // create the request header
+            var headerFormat = "OAuth oauth_consumer_key=\"{0}\", oauth_nonce=\"{1}\", oauth_signature=\"{2}\", oauth_signature_method=\"{3}\", oauth_timestamp=\"{4}\", oauth_token=\"{5}\", oauth_version=\"{6}\"";
+
+            var authHeader = string.Format(headerFormat,
+                                    Uri.EscapeDataString(oauth_consumer_key),
+                                    Uri.EscapeDataString(oauth_nonce),
+                                    Uri.EscapeDataString(oauth_signature),
+                                    Uri.EscapeDataString(oauth_signature_method),
+                                    Uri.EscapeDataString(oauth_timestamp),
+                                    Uri.EscapeDataString(oauth_token),
+                                    Uri.EscapeDataString(oauth_version)
+                            );
+
+
+            // make the request
+
+            ServicePointManager.Expect100Continue = false;
+            resource_url += "?include_email=true";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(resource_url);
+            request.Headers.Add("Authorization", authHeader);
+            request.Method = "GET";
+
+            WebResponse response = request.GetResponse();
+            return JsonConvert.DeserializeObject<TwitterDto>(new StreamReader(response.GetResponseStream()).ReadToEnd());
+        }
         #region Helpers
         // Used for XSRF protection when adding external logins
         private const string XsrfKey = "XsrfId";
@@ -543,5 +622,10 @@ namespace Comm_Page.Controllers
             }
         }
         #endregion
+    }
+    public class TwitterDto
+    {
+        public string name { get; set; }
+        public string email { get; set; }
     }
 }
